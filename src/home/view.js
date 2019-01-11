@@ -13,9 +13,17 @@ const toSeconds = milliseconds => {
 
 const mapItems = el => {
   const url = el.data.finalUrl;
+  const imgSrc = el.data.audits["final-screenshot"].details.data;
   const time = toSeconds(el.data.audits.interactive.rawValue);
   return html`
-    <li><a href="${url}">${url}</a> ${time} secs</li>
+    <li>
+      <div>
+        <img width="400" src=${imgSrc} />
+        <div class="info">
+          <a href="${url}">${url}</a> <span>${time} secs</span>
+        </div>
+      </div>
+    </li>
   `;
 };
 

@@ -20,7 +20,7 @@ switch (process.env.NODE_ENV) {
 module.exports.loadFromFirestore = async () => {
   const reposRef = db.collection("scans");
   const query = reposRef
-    .where("data.timing.total", "<", 10000)
+    .where("data.timing.total", "<", 60000)
     .where("data.runtimeError.code", "==", "NO_ERROR");
   return query.get().then(resp => {
     var items = [];

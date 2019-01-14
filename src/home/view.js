@@ -18,31 +18,62 @@ const mapItems = el => {
   return html`
     <li>
       <div>
-        <img width="400" src=${imgSrc} />
+        <a alt="{${url}}" href="${url}"><img width="100%" src=${imgSrc}/></a>
         <div class="info">
-          <a href="${url}">${url}</a> <span>${time} secs</span>
+          <a alt=${url} href="${url}">${url}</a> <span>${time} secs</span>
         </div>
       </div>
     </li>
   `;
 };
 
-const outputList = async () => {
-  const result = await loadFromFirestore();
-  return html`
-    <ul>
-      ${result.map(mapItems)}
-    </ul>
+const renderPaging = async ({ result, currentPage }) => {
+  if (result.length < 1) {
+    return;
+  }
+
+  let nextPage = Number(currentPage) + 1;
+
+  let paging = html`
+    <div class="paging"><a href=${nextPage}>Next</a></div>
   `;
+
+  return render(paging);
 };
 
-const renderMarkup = async () => {
-  return render(await outputList());
+const renderMarkup = async ({ currentPage }) => {
+  const result = await loadFromFirestore({ currentPage });
+  let list = "";
+  let paging = "";
+  if (!result.length) {
+    list = html`
+      <ul>
+        <li>no records found</li>
+      </ul>
+    `;
+  } else {
+    list = html`
+      <ul>
+        ${result.map(mapItems)}
+      </ul>
+    `;
+
+    paging = await renderPaging({ result, currentPage });
+  }
+
+  list = await render(list);
+
+  return `${paging} ${list} ${paging}`;
 };
 
-export const view = async () => {
-  const rendered = await renderMarkup();
-  return pug.renderFile(path.resolve(__dirname, "template.pug"), {
-    html: rendered
-  });
+export const view = async ({ currentPage }) => {
+  let html = "";
+  try {
+    html = await renderMarkup({ currentPage });
+  } catch (e) {
+    html = e.message;
+  }
+
+  const template = path.resolve(__dirname, "template.pug");
+  return pug.renderFile(template, { html });
 };

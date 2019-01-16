@@ -17,25 +17,25 @@ switch (process.env.NODE_ENV) {
     db = admin.firestore();
 }
 
-module.exports.loadFromFirestore = async ({ currentPage = 0, max = 100 }) => {
+module.exports.loadFromFirestore = async ({ currentPage = 0, max = 4000 }) => {
   let start = Number(currentPage) * max;
 
   if (!start) {
     start = 0;
   }
+
   console.log("start", start);
 
   const reposRef = db.collection("scans");
+
   const query = reposRef
     .select(
       "data.finalUrl",
       "data.audits.final-screenshot.details.data",
       "data.audits.interactive.rawValue"
     )
-    .where("data.timing.total", "<", 60000)
-    .orderBy("data.timing.total")
     .where("data.runtimeError.code", "==", "NO_ERROR")
-    .startAt(start)
+    .orderBy("updatedAt", "desc")
     .limit(max);
 
   let items = [];
@@ -43,6 +43,5 @@ module.exports.loadFromFirestore = async ({ currentPage = 0, max = 100 }) => {
   const results = await query.get();
   console.timeEnd("query-urls");
   results.forEach(r => items.push(r.data()));
-
   return items;
 };
